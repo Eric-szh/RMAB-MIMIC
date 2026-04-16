@@ -60,7 +60,8 @@ python scripts/run_rmab_experiment.py \
   --horizon-days 30 \
   --cohort-size 200 \
   --k-capacity 20 \
-  --icu-stay-days 7
+  --icu-stay-days 7 \
+  --sensitivity-multipliers 0.5,1.0,2.0
 ```
 
 ### Evaluation outputs

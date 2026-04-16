@@ -241,6 +241,7 @@ def main() -> None:
     parser.add_argument("--reward-alive", type=float, default=1.0)
     parser.add_argument("--death-penalty", type=float, default=-100.0)
     parser.add_argument("--icu-cost", type=float, default=0.25)
+    parser.add_argument("--sensitivity-multipliers", default="0.5,1.0,2.0")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -274,9 +275,10 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     result.to_csv(out_dir / "policy_comparison.csv", index=False)
 
+    multipliers = [float(x.strip()) for x in args.sensitivity_multipliers.split(",") if x.strip()]
     sensitivity = []
-    for k in [max(1, cfg.k_capacity // 2), cfg.k_capacity, cfg.k_capacity * 2]:
-        for icu_cost in [cfg.icu_cost * 0.5, cfg.icu_cost, cfg.icu_cost * 2]:
+    for k in sorted({max(1, int(round(cfg.k_capacity * m))) for m in multipliers}):
+        for icu_cost in [cfg.icu_cost * m for m in multipliers]:
             cfg2 = replace(cfg, k_capacity=k, icu_cost=icu_cost)
             for p in policies:
                 metrics = evaluate_policy(p, P0, P1, cohort, death_state, cfg2, rng)

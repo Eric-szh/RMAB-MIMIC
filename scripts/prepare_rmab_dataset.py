@@ -197,7 +197,7 @@ def discretize_state(features: pd.DataFrame, state_spec: str) -> Tuple[pd.DataFr
     df = features.copy()
     df["map_bin"] = pd.cut(df["map"], bins=[-np.inf, 65, 100, np.inf], labels=[0, 1, 2]).astype(int)
     df["spo2_bin"] = pd.cut(df["spo2"], bins=[-np.inf, 90, 95, np.inf], labels=[0, 1, 2]).astype(int)
-    df["gcs_bin"] = pd.cut(df["gcs_total"], bins=[2, 8, 12, 15], labels=[0, 1, 2]).astype(int)
+    df["gcs_bin"] = pd.cut(df["gcs_total"], bins=[2, 8, 12, 16], labels=[0, 1, 2]).astype(int)
     df["lactate_bin"] = pd.cut(df["lactate"], bins=[-np.inf, 2, 4, np.inf], labels=[2, 1, 0]).astype(int)
 
     if state_spec == "4var":
