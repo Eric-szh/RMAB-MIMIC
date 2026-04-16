@@ -94,14 +94,18 @@ class IndexPolicy(Policy):
 def solve_value(P0: np.ndarray, P1: np.ndarray, reward_state: np.ndarray, icu_cost: float, gamma: float, iters: int = 500, tol: float = 1e-8) -> np.ndarray:
     """Run value iteration for a two-action single-arm MDP and return state values."""
     v = np.zeros_like(reward_state, dtype=float)
+    converged = False
     for _ in range(iters):
         q0 = reward_state + gamma * (P0 @ v)
         q1 = reward_state - icu_cost + gamma * (P1 @ v)
         v_next = np.maximum(q0, q1)
         if np.max(np.abs(v_next - v)) < tol:
             v = v_next
+            converged = True
             break
         v = v_next
+    if not converged:
+        print("Warning: value iteration reached max iterations without tolerance convergence.")
     return v
 
 
@@ -157,6 +161,7 @@ def simulate_episode(
     subgroup_reward: Dict[str, float] = {}
 
     reward_state = make_rewards(P0, death_state, cfg.reward_alive, cfg.death_penalty)
+    unique_subgroups = np.unique(subgroup)
 
     for _ in range(cfg.horizon_days):
         alive = states != death_state
@@ -183,7 +188,7 @@ def simulate_episode(
         newly_dead = (states != death_state) & (next_states == death_state)
         total_deaths += int(newly_dead.sum())
 
-        for g in np.unique(subgroup):
+        for g in unique_subgroups:
             mask = subgroup == g
             subgroup_reward[str(g)] = subgroup_reward.get(str(g), 0.0) + float(reward_state[states[mask]].sum() - cfg.icu_cost * actions[mask].sum())
 
