@@ -92,6 +92,7 @@ class IndexPolicy(Policy):
 
 
 def solve_value(P0: np.ndarray, P1: np.ndarray, reward_state: np.ndarray, icu_cost: float, gamma: float, iters: int = 500, tol: float = 1e-8) -> np.ndarray:
+    """Run value iteration for a two-action single-arm MDP and return state values."""
     v = np.zeros_like(reward_state, dtype=float)
     for _ in range(iters):
         q0 = reward_state + gamma * (P0 @ v)
@@ -111,6 +112,7 @@ def make_rewards(P0: np.ndarray, death_state: int, reward_alive: float, death_pe
 
 
 def policy_bundle(P0: np.ndarray, P1: np.ndarray, death_state: int, cfg: EvalConfig, rng: np.random.Generator) -> List[Policy]:
+    """Construct random, severity, myopic, and index-style policies from model primitives."""
     mortality_risk = P0[:, death_state]
     severity = mortality_risk.copy()
     r = make_rewards(P0, death_state, cfg.reward_alive, cfg.death_penalty)
@@ -143,6 +145,7 @@ def simulate_episode(
     cfg: EvalConfig,
     rng: np.random.Generator,
 ) -> Dict[str, float]:
+    """Simulate one RMAB episode with fixed ICU-stay timers and daily top-K admissions."""
     n = len(init_states)
     states = init_states.copy()
     icu_remaining = np.zeros(n, dtype=int)
@@ -202,6 +205,7 @@ def simulate_episode(
 
 
 def evaluate_policy(policy: Policy, P0: np.ndarray, P1: np.ndarray, cohort: pd.DataFrame, death_state: int, cfg: EvalConfig, rng: np.random.Generator) -> Dict[str, float]:
+    """Estimate policy performance over repeated episodes and aggregate mean/std metrics."""
     metrics = []
     for _ in range(cfg.episodes):
         pop = sample_initial_population(cohort, cfg.cohort_size, rng)

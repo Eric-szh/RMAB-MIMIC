@@ -85,6 +85,11 @@ def expand_to_daily(df: pd.DataFrame, start_col: str, end_col: str, keys: list[s
 
 
 def build_features(mimic_root: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Load MIMIC-IV tables and build daily clinical features per admission-day.
+
+    The function merges ICU exposure, daily vital/lab summaries, and demographics,
+    then applies within-patient forward fill and median imputation.
+    """
     hosp = mimic_root / "hosp"
     icu = mimic_root / "icu"
 
@@ -184,6 +189,11 @@ def build_features(mimic_root: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def discretize_state(features: pd.DataFrame, state_spec: str) -> Tuple[pd.DataFrame, int, int]:
+    """Discretize clinical variables and encode RMAB state index.
+
+    Variables are binned into ternary risk levels and encoded with base-3 indexing.
+    The final in-hospital day for fatal admissions is mapped to an absorbing death state.
+    """
     df = features.copy()
     df["map_bin"] = pd.cut(df["map"], bins=[-np.inf, 65, 100, np.inf], labels=[0, 1, 2]).astype(int)
     df["spo2_bin"] = pd.cut(df["spo2"], bins=[-np.inf, 90, 95, np.inf], labels=[0, 1, 2]).astype(int)
@@ -235,6 +245,11 @@ def build_counts(transitions: pd.DataFrame, n_states: int) -> Tuple[np.ndarray, 
 
 
 def smooth_counts(counts: np.ndarray, alpha: float, min_support: int, death_state: int) -> np.ndarray:
+    """Convert transition counts into smoothed row-stochastic probabilities.
+
+    Rows with support >= min_support receive Dirichlet-style smoothing with global prior;
+    lower-support rows back off to the global prior, and death is forced absorbing.
+    """
     probs = np.zeros_like(counts, dtype=float)
     uniform = np.ones(counts.shape[1], dtype=float) / counts.shape[1]
     global_prior = counts.sum(axis=0)
@@ -252,6 +267,7 @@ def smooth_counts(counts: np.ndarray, alpha: float, min_support: int, death_stat
 
 
 def bootstrap_self_loop_ci(transitions: pd.DataFrame, n_states: int, n_boot: int, seed: int) -> pd.DataFrame:
+    """Estimate 95% bootstrap confidence intervals for self-loop probabilities."""
     rng = np.random.default_rng(seed)
     rows = []
     for action in [0, 1]:
