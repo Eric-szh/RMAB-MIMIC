@@ -236,8 +236,9 @@ def build_counts(transitions: pd.DataFrame, n_states: int) -> Tuple[np.ndarray, 
 
 def smooth_counts(counts: np.ndarray, alpha: float, min_support: int, death_state: int) -> np.ndarray:
     probs = np.zeros_like(counts, dtype=float)
+    uniform = np.ones(counts.shape[1], dtype=float) / counts.shape[1]
     global_prior = counts.sum(axis=0)
-    global_prior = global_prior / global_prior.sum() if global_prior.sum() > 0 else np.ones(counts.shape[1]) / counts.shape[1]
+    global_prior = global_prior / global_prior.sum() if global_prior.sum() > 0 else uniform
     row_sums = counts.sum(axis=1)
     for i in range(counts.shape[0]):
         if i == death_state:

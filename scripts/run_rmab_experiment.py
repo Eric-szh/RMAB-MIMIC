@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import replace
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
@@ -26,7 +27,7 @@ class EvalConfig:
 
 
 class Policy:
-    name: str
+    name = "base"
 
     def select(self, states: np.ndarray, eligible: np.ndarray, k: int, **kwargs) -> np.ndarray:
         raise NotImplementedError
@@ -272,7 +273,7 @@ def main() -> None:
     sensitivity = []
     for k in [max(1, cfg.k_capacity // 2), cfg.k_capacity, cfg.k_capacity * 2]:
         for icu_cost in [cfg.icu_cost * 0.5, cfg.icu_cost, cfg.icu_cost * 2]:
-            cfg2 = EvalConfig(**{**cfg.__dict__, "k_capacity": k, "icu_cost": icu_cost})
+            cfg2 = replace(cfg, k_capacity=k, icu_cost=icu_cost)
             for p in policies:
                 metrics = evaluate_policy(p, P0, P1, cohort, death_state, cfg2, rng)
                 metrics["k_capacity"] = k

@@ -28,8 +28,8 @@ Python 3.10+ with:
 ## Prepare RMAB artifacts
 
 ```bash
-python /home/runner/work/RMAB-MIMIC/RMAB-MIMIC/scripts/prepare_rmab_dataset.py \
-  --repo-root /home/runner/work/RMAB-MIMIC/RMAB-MIMIC \
+python scripts/prepare_rmab_dataset.py \
+  --repo-root . \
   --demo-zip data/mimic-iv-demo.zip \
   --out-dir artifacts/rmab \
   --state-spec 4var \
@@ -54,8 +54,8 @@ If you have full MIMIC-IV extracted locally, pass `--mimic-root /absolute/path/t
 ## Run RMAB policy evaluation
 
 ```bash
-python /home/runner/work/RMAB-MIMIC/RMAB-MIMIC/scripts/run_rmab_experiment.py \
-  --artifact-dir /home/runner/work/RMAB-MIMIC/RMAB-MIMIC/artifacts/rmab \
+python scripts/run_rmab_experiment.py \
+  --artifact-dir artifacts/rmab \
   --episodes 100 \
   --horizon-days 30 \
   --cohort-size 200 \
