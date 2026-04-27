@@ -1,42 +1,113 @@
 # RMAB-MIMIC
 
-RMAB-MIMIC is a notebook-driven research project for modeling ICU allocation as a **Restless Multi-Armed Bandit (RMAB)** problem on the **eICU-CRD Demo v2.0.1**. It builds empirical patient-state transition matrices from EHR data, evaluates allocation heuristics, and compares a clinical-only model against a fairness-focused variant that adds insurance status to the state space.
+RMAB-MIMIC is a notebook-driven research project for modeling ICU allocation as a **Restless Multi-Armed Bandit (RMAB)** problem using real-world clinical datasets. The project builds empirical patient-state transition matrices from EHR data, evaluates allocation heuristics, and studies fairness in resource allocation decisions.
+
+---
+
+## Repository Overview
+
+This repository contains **two branches**, each corresponding to a different dataset and fairness setting:
+
+### 🔹 `main` branch
+- Dataset: **MIMIC-IV Clinical Database Demo v2**
+- Fairness variable: **Insurance status**
+- Focus: Compare clinical-only vs insurance-aware allocation
+
+### 🔹 `eicu-demo-pipeline` branch
+- Dataset: **eICU-CRD Demo v2.0.1**
+- Fairness variable: **Hospital region (South / Midwest / Northeast+West)**
+- Focus: Study fairness across geographic variation instead of insurance
+
+---
 
 ## What this project does
 
-The repository is organized around five notebooks that form an end-to-end workflow:
+Across both branches, the workflow follows a consistent pipeline:
 
-- [transition_matrix_pipeline.ipynb](transition_matrix_pipeline.ipynb) builds the clinical-only transition matrices `P_icu.npy` and `P_nonicu.npy` from the MIMIC-IV Demo tables.
-- [model_A_fairness_pipeline.ipynb](model_A_fairness_pipeline.ipynb) extends the state space with insurance status and produces `P_icu_A.npy` and `P_nonicu_A.npy`.
-- [rmab_allocation_heuristic.ipynb](rmab_allocation_heuristic.ipynb) simulates a first-pass ICU allocation policy using the learned transition matrices.
-- [rmab_ml_policy_training.ipynb](rmab_ml_policy_training.ipynb) trains and evaluates a Q-learning policy on the RMAB dynamics.
-- [rmab_compare_modelA_modelB.ipynb](rmab_compare_modelA_modelB.ipynb) compares the clinical-only and insurance-augmented models under the same simulation design.
+1. **Data preprocessing**
+   - Convert raw EHR tables into patient-day level observations
+   - Discretize clinical features into a finite state space
 
-In practice, the project turns raw gzipped CSV tables into daily patient states, discretizes those states into Markov transitions, and then uses the resulting dynamics to study ICU allocation policies.
+2. **Transition matrix learning**
+   - Learn:
+     - `P_icu`: transition under ICU care
+     - `P_nonicu`: transition without ICU care
 
-## Why this project has relevance to social impact
+3. **Model variants**
+   - **Model B (baseline)**: clinical-only state space  
+   - **Model A (fairness-aware)**: extends state space with non-clinical attributes
 
-- reproduce an RMAB pipeline on a real clinical dataset;
-- compare clinical-only decision making with a fairness-aware alternative;
-- reuse the learned transition matrices in downstream policy simulation or optimization;
-- inspect how non-clinical attributes such as insurance status can affect allocation outcomes;
-- keep the full workflow in notebooks so each stage remains easy to inspect and rerun.
+4. **Policy evaluation**
+   - Simulate ICU allocation under capacity constraints
+   - Compare heuristic and learning-based policies
 
-The main outputs are reusable NumPy arrays and figures saved at the repository root or under `artifacts/rmab/`.
+---
 
-## Repository layout
+## Notebook Structure (by branch)
+
+### 📍 `main` (MIMIC-IV)
+
+- `transition_matrix_pipeline.ipynb`  
+  Builds clinical-only transition matrices (Model B)
+
+- `model_A_fairness_pipeline.ipynb`  
+  Adds **insurance status** → fairness-aware Model A
+
+- `rmab_allocation_heuristic.ipynb`  
+  Simulates heuristic ICU allocation
+
+- `rmab_ml_policy_training.ipynb`  
+  Trains Q-learning policy
+
+- `rmab_compare_modelA_modelB.ipynb`  
+  Compares fairness vs clinical-only models
+
+---
+
+### 📍 `eicu-demo-pipeline`
+
+- `eicu_transition_matrix_pipeline.ipynb`  
+  Model B (clinical-only, 82-state space)
+
+- `eicu_model_A_fairness_pipeline.ipynb`  
+  Model A using **hospital region** as fairness variable
+
+---
+
+## Key Idea
+
+We model ICU allocation as an RMAB problem:
+
+- Each patient = an arm  
+- Action = assign ICU care or not  
+- Patients evolve over time regardless of action (**restless**)  
+- ICU capacity constraint limits number of treated patients  
+
+---
+
+## Social Impact
+
+This project explores how AI-driven allocation decisions:
+
+- Improve **patient outcomes**
+- Optimize **limited ICU resources**
+- Reveal potential **bias from non-clinical factors**
+  - insurance (MIMIC-IV)
+  - region (eICU)
+
+---
+
+## Repository Layout (example: `main` branch)
 
 ```text
 RMAB-MIMIC/
 ├── data/
 │   └── mimic-iv-demo/
-│       └── mimic-iv-clinical-database-demo-2.2/
 ├── artifacts/
 │   └── rmab/
-│       ├── baseline/
-│       ├── evaluation/
 │       ├── matrices/
-│       └── processed/
+│       ├── processed/
+│       └── evaluation/
 ├── transition_matrix_pipeline.ipynb
 ├── model_A_fairness_pipeline.ipynb
 ├── rmab_allocation_heuristic.ipynb
@@ -46,9 +117,6 @@ RMAB-MIMIC/
 ├── P_nonicu.npy
 ├── P_icu_A.npy
 └── P_nonicu_A.npy
-```
-
-The `data/mimic-iv-demo/mimic-iv-clinical-database-demo-2.2/` folder is expected to contain the extracted MIMIC-IV Demo release, including the `hosp/` and `icu/` tables used by the notebooks. See the bundled dataset documentation in [data/mimic-iv-demo/mimic-iv-clinical-database-demo-2.2/README.txt](data/mimic-iv-demo/mimic-iv-clinical-database-demo-2.2/README.txt).
 
 ## Getting started
 
